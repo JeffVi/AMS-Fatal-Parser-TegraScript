@@ -1,0 +1,142 @@
+#REQUIRE KEYS
+#REQUIRE SD
+#REQUIRE MINERVA
+#REQUIRE VER 4.0.0
+
+version = "1.0"
+report2parse = 0
+
+Title = {
+    color(0x4040FF)
+    println("AMS Fatal Parser", version, "\n\n")
+    color(0xFFFFFF)
+}
+
+CheckReports = {
+
+    ams_fataldir = readdir("sd:/atmosphere/fatal_errors")
+    
+    println("Checking for AMS fatal reports...")
+    if (ams_fataldir.result){
+        color(0xFF0000)
+        println("ERROR! Failed to open sd:/atmosphere/fatal_errors \n\nPress any key to exit!")
+        pause()
+        exit()
+    }
+
+    reports_list = ["Cancel"].copy()
+    ams_fataldir.files.foreach("report"){
+        name = report.split("_")
+        if (name[0] == "report"){
+            reports_list.add(report)
+        }
+    }
+
+    if (reports_list.len() == 0){
+        color(0xFFFF00)
+        println("sd:/atmosphere/fatal_errors is empty! \n\nPress any key to exit!")
+        pause()
+        exit()
+    }
+}
+
+ReadReport = {
+    
+    color(0x0000FF)
+    println("Select a report file \n")
+    color(0xFFFFFF)
+
+    report2parse = menu(reports_list, report2parse)
+    if (report2parse == 0){
+        exit()
+    }
+
+    report_file = readfile(combinepath("sd:/atmosphere/fatal_errors", ams_fataldir.files[report2parse]))
+}
+
+ParseReport = {
+
+    CheckAFE2()
+    
+    TID = report_file.slice(0x8, 0x9)
+    err_code = report_file.slice(0x10, 0x12)
+
+    hex2print = TID.project()
+    hex_len = 8
+    print("Title ID: ")
+    PrintHex()
+
+    hex2print = err_code.project()
+    hex_len = 2
+    print("Error code: 0x")
+    PrintHex()
+
+    color(0xFFFF00)
+    println()
+    print("Press any key...")
+    color(0xFFFFFF)
+
+    pause()
+    Main()
+}
+
+PrintHex = {
+
+    while (hex_len > 0){
+        hex_len = hex_len - 1
+
+        hex_d = hex2print[hex_len] % 16
+        hex_u = (hex2print[hex_len] - hex_d) / 16
+
+        if (hex_u < 10){str_u = hex_u.str()}
+        if (hex_u == 10){str_u = "A"}
+        if (hex_u == 11){str_u = "B"}
+        if (hex_u == 12){str_u = "C"}
+        if (hex_u == 13){str_u = "D"}
+        if (hex_u == 14){str_u = "E"}
+        if (hex_u == 15){str_u = "F"}
+
+        if (hex_d < 10){str_d = hex_d.str()}
+        if (hex_d == 10){str_d = "A"}
+        if (hex_d == 11){str_d = "B"}
+        if (hex_d == 12){str_d = "C"}
+        if (hex_d == 13){str_d = "D"}
+        if (hex_d == 14){str_d = "E"}
+        if (hex_d == 15){str_d = "F"}
+
+        print(str_u + str_d)
+    }
+    println()
+}
+
+CheckAFE2 = {
+    AFE2 = ["BYTE[]", 0x41, 0x46, 0x45, 0x32]
+    head = report_file.slice(0x0, 0x4).project()
+    if ((head == AFE2).not()){
+        color(0xFF0000)
+        println("ERROR!", ams_fataldir.files[report2parse], "is not valid! Found", head.bytestostr(), "instead of", AFE2.bytestostr())
+        color(0xFFFF00)
+        println("\nPress any key...!")
+        pause()
+        Main()
+    }
+}
+
+Main = {
+
+    clear()
+    Title()
+
+    ReadReport()
+    
+    clear()
+    Title()
+    
+    ParseReport()
+}
+
+Title()
+    
+CheckReports()
+
+Main()
