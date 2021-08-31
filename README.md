@@ -8,6 +8,7 @@ This script uses [TegraScript v3](https://github.com/suchmememanyskill/TegraScri
 # Features
 
 Select the report you want to parse to display the error code and the title ID.
+Display the title/sysmodule name (titles database from [SwitchBrew](https://switchbrew.org/wiki/Title_list) and sysmodules database from [ndeadly](https://gist.github.com/ndeadly/a4b8c01bb453028cd0008f282098f696)).
 
 # How To Use
 
