@@ -2,8 +2,8 @@
 #REQUIRE MINERVA
 #REQUIRE VER 4.0.0
 
-version = "1.0"
-report2parse = 0
+version = "1.1"
+report2parse = -1
 
 Title = {
     color(0x4040FF)
@@ -41,15 +41,15 @@ CheckReports = {
 
 ReadReport = {
     
-    color(0x0000FF)
+    color(0xFFFF00)
     println("Select a report file \n")
     color(0xFFFFFF)
 
-    report2parse = menu(reports_list, report2parse)
+    report2parse = menu(reports_list, report2parse + 1)
     if (report2parse == 0){
         exit()
     }
-
+    report2parse = report2parse - 1
     report_file = readfile(combinepath("sd:/atmosphere/fatal_errors", ams_fataldir.files[report2parse]))
 }
 
@@ -60,19 +60,19 @@ ParseReport = {
     TID = report_file.slice(0x8, 0x9)
     err_code = report_file.slice(0x10, 0x12)
 
-    hex2print = TID.project()
-    hex_len = 8
-    print("Title ID: ")
-    GetHex()
-    println(hex_str)
-    CheckTID()
-
     hex2print = err_code.project()
     hex_len = 2
     print("Error: 0x")
     GetHex()
     println(hex_str)
     CheckErr()
+    
+    hex2print = TID.project()
+    hex_len = 8
+    print("Title ID: ")
+    GetHex()
+    println(hex_str)
+    CheckTID()
 
     color(0xFFFF00)
     println()
@@ -128,13 +128,27 @@ CheckAFE2 = {
 
 CheckErr = {
 
-    err_int = (hex2print[0] * 256) + hex2print[1]
+    err_int = (hex2print[1] * 256) + hex2print[0]
     err_module = err_int & 0x1FF
     err_description = (err_int >> 9) & 0x3FFF
     print("Error code: ")
     print(2000 + err_module)
     print("-")
+    if (err_description < 1000){print(0)}
+    if (err_description < 100){print(0)}
+    if (err_description < 10){print(0)}
     println(err_description)
+
+    cpt = -1
+    modules.IDs.foreach("ID"){
+        cpt = cpt + 1
+        if (err_module == ID){
+            println("Module:", modules.names[cpt])
+            cpt = -1
+            break()
+        }
+    }
+
 }
 
 CheckTID = {
@@ -143,9 +157,22 @@ CheckTID = {
     sysmodules.IDs.foreach("ID"){
         cpt = cpt + 1
         if (hex_str == ID){
-            println("Sysmodule name:", sysmodules.names[cpt])
+            println("Sysmodule name:", sysmodules.names[cpt], "\n")
             cpt = -1
             break()
+        }
+    }
+
+    if (cpt != -1){
+        cpt = -1
+        custom_sysmodules.IDs.foreach("ID"){
+            cpt = cpt + 1
+            if (hex_str == ID){
+                println("Custom sysmodule name:", custom_sysmodules.names[cpt], "\n")
+                cpt = -1
+                CheckContents()
+                break()
+            }
         }
     }
 
@@ -154,15 +181,40 @@ CheckTID = {
         titles.IDs.foreach("ID"){
             cpt = cpt + 1
             if (hex_str == ID){
-                println("Title name:", titles.names[cpt])
-                break()
+                println("Title name:", titles.names[cpt], "\n")
+                cpt = -1
+                break(combinepath())
             }
         }
     }
 
 }
 
-CheckContents = {}
+CheckContents = {
+    contents = readdir("sd:/atmosphere/contents")
+    if (contents.result.not()){
+        contents.folders.foreach("folder"){
+            if (folder == hex_str){
+                color(0x00FF00)
+                println("Found custom sysmodule in sd:/atmosphere/contents")
+                color(0xFFFF00)
+                println("Would you like to remove the sysmodule?\n")
+                res = menu(["No","Yes"],0)
+                if (res){
+                    deldir(combinepath("sd:/atmosphere/contents", folder))
+                    color(0x00FF00)
+                    println("\nSuccessfully deleted sysmodule")
+                    color(0xFFFF00)
+                    println()
+                    print("Press any key...")
+                    pause()
+                }
+                break()
+            }
+        }
+    }
+    Main()
+}
 
 sysmodules = dict()
 
@@ -233,55 +285,7 @@ sysmodules.IDs = [
     "010000000000003F",
     "0100000000000040",
     "0100000000000041",
-    "0100000000000042",
-    "0000000000534C56",
-    "00FF0000000002AA",
-    "00FF0000636C6BFF",
-    "00FF00006D7470FF",
-    "00FF0000A53BB665",
-    "00FF747765616BFF",
-    "0100000000000052",
-    "0100000000000081",
-    "0100000000000352",
-    "0100000000000464",
-    "0100000000000523",
-    "0100000000000901",
-    "0100000000000BEF",
-    "0100000000000DAD",
-    "0100000000000F12",
-    "0100000000000FAF",
-    "0100000000006480",
-    "0100000000007200",
-    "010000000000BD00",
-    "010000000000C235",
-    "010000000000F00F",
-    "010000000000FFAB",
-    "01000000001ED1ED",
-    "0532232232232000",
-    "054E4F4558454000",
-    "2200000000000100",
-    "4100000000000324",
-    "4200000000000000",
-    "420000000000000E",
-    "420000000000000F",
-    "4200000000000010",
-    "4200000000000811",
-    "4200000000000BAC",
-    "4200000000000FFF",
-    "420000000007E51A",
-    "4200000000474442",
-    "4200000000696969",
-    "4200000AF1E8DA89",
-    "42000062616B6101",
-    "4200736372697074",
-    "4206900000000012",
-    "430000000000000A",
-    "430000000000000B",
-    "430000000000000C",
-    "43000000000000FF",
-    "4300000000000909",
-    "5600000000000000",
-    "690000000000000D"
+    "0100000000000042"
 ]
 
 sysmodules.names = [
@@ -351,7 +355,63 @@ sysmodules.names = [
     "dt",
     "nd",
     "ngct",
-    "pgl",
+    "pgl"
+]
+
+custom_sysmodules = dict()
+
+custom_sysmodules.IDs = [
+    "0000000000534C56",
+    "00FF0000000002AA",
+    "00FF0000636C6BFF",
+    "00FF00006D7470FF",
+    "00FF0000A53BB665",
+    "00FF747765616BFF",
+    "0100000000000052",
+    "0100000000000081",
+    "0100000000000352",
+    "0100000000000464",
+    "0100000000000523",
+    "0100000000000901",
+    "0100000000000BEF",
+    "0100000000000DAD",
+    "0100000000000F12",
+    "0100000000000FAF",
+    "0100000000006480",
+    "0100000000007200",
+    "010000000000BD00",
+    "010000000000C235",
+    "010000000000F00F",
+    "010000000000FFAB",
+    "01000000001ED1ED",
+    "0532232232232000",
+    "054E4F4558454000",
+    "2200000000000100",
+    "4100000000000324",
+    "4200000000000000",
+    "420000000000000E",
+    "420000000000000F",
+    "4200000000000010",
+    "4200000000000811",
+    "4200000000000BAC",
+    "4200000000000FFF",
+    "420000000007E51A",
+    "4200000000474442",
+    "4200000000696969",
+    "4200000AF1E8DA89",
+    "42000062616B6101",
+    "4200736372697074",
+    "4206900000000012",
+    "430000000000000A",
+    "430000000000000B",
+    "430000000000000C",
+    "43000000000000FF",
+    "4300000000000909",
+    "5600000000000000",
+    "690000000000000D"
+]
+
+custom_sysmodules.names = [
     "SaltyNX",
     "BootSoundNX",
     "sys-clk",
@@ -457,7 +517,7 @@ modules.IDs = [
 ]
 
 modules.names = [
-    "Svc","Fs","Os","Htcs","Ncm","Dd","Osdbg","Lr","Ldr","Sf","Sf_Hipc","Tma","Pm","Ns","Bsdsockets","Htc","Tsc","Kvdb","Sm","Ro","Gc","Sdmmc","Ovln","Spl","Socket","Htclow","Ddsf","Htcfs","Async","Util","Tipc","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",
+    "Svc","Fs","Os","Htcs","Ncm","Dd","Osdbg","Lr","Ldr","Sf","Sf_Hipc","Tma","Pm","Ns","Bsdsockets","Htc","Tsc","Kvdb","Sm","Ro","Gc","Sdmmc","Ovln","Spl","Socket","Htclow","Ddsf","Htcfs","Async","Util","Tipc","Eth","I2c","Gpio","Uart","Settings","Wlan","Xcd","Nifm","Codec","Lsm6ds3","Bluetooth","Vi","Nfp","Time","Fgm","Oe","Pcie","Friends","Bcat","Ssl","Account","News","Mii","Nfc","Am","Prepo","Ahid","Applet","Ae","Pcv","Usb_Pd","Bpc","Psm","Nim","Psc","Tc","Usb","Nsd","Pctl","Btm","La","Es","Ngc","Erpt","Apm","Cec","Profiler","Eupld","Lidbe","Audio","Npns","Http","Idle","Arp","Updater","Swkbd","Netdiag","Nfc_Mifare","Err","Fatal","Ec","Spsm","Aoc","Bgtc","Creport","Sasbus","Pl","Lbl","Jit","Hdcp","Omm","Pdm","Olsc","Srepo","Dauth","Stdfu","Dbg","Spi","Pwm","Rtc","Regulator","Led","Clkrst","Powctl","Hid","Ldn","Cs","Irsensor","Capsrv","Manu","Atk","Web","Lcs","Grc","Repair","Album","Rid","Migration","Migration_Idc","Hidbus","Ens","Websocket","Capmtp","Pgl","Notification","Ins","Lp2p","Rcd","Prc","Ectx","Dp2hdmi","Tspm"
 ]
 
 Main = {
