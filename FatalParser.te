@@ -80,7 +80,7 @@ ParseReport = {
     color(0xFFFFFF)
 
     pause()
-    Main()
+    exit()
 }
 
 GetHex = {
@@ -122,7 +122,7 @@ CheckAFE2 = {
         color(0xFFFF00)
         println("\nPress any key...!")
         pause()
-        Main()
+        exit()
     }
 }
 
@@ -170,7 +170,7 @@ CheckTID = {
             if (hex_str == ID){
                 println("Custom sysmodule name:", custom_sysmodules.names[cpt], "\n")
                 cpt = -1
-                CheckContents()
+                # CheckContents()
                 break()
             }
         }
@@ -183,7 +183,7 @@ CheckTID = {
             if (hex_str == ID){
                 println("Title name:", titles.names[cpt], "\n")
                 cpt = -1
-                break(combinepath())
+                break()
             }
         }
     }
@@ -199,21 +199,27 @@ CheckContents = {
                 println("Found custom sysmodule in sd:/atmosphere/contents")
                 color(0xFFFF00)
                 println("Would you like to remove the sysmodule?\n")
+
                 res = menu(["No","Yes"],0)
-                if (res){
+                # Somehow exit() is ignored?!?
+                if (res == 0){exit()}
+                if (res == 1){
+                    clear()
+                    Title()
                     deldir(combinepath("sd:/atmosphere/contents", folder))
+                    clear()
+                    Title()
                     color(0x00FF00)
                     println("\nSuccessfully deleted sysmodule")
                     color(0xFFFF00)
                     println()
                     print("Press any key...")
                     pause()
+                    exit()
                 }
-                break()
             }
         }
     }
-    Main()
 }
 
 sysmodules = dict()
@@ -529,7 +535,7 @@ Main = {
     
     clear()
     Title()
-    
+
     ParseReport()
 }
 
