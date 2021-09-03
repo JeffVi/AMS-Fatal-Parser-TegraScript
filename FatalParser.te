@@ -57,7 +57,7 @@ ParseReport = {
 
     CheckAFE2()
     
-    TID = report_file.slice(0x8, 0x9)
+    TID = report_file.slice(0x8, 0x10)
     err_code = report_file.slice(0x10, 0x12)
 
     hex2print = err_code.project()
